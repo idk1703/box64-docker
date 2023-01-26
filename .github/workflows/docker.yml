@@ -1,0 +1,36 @@
+name: Docker
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build-docker-image:
+    runs-on: ubuntu-22.04
+    name: Build Docker image
+    steps:
+      - name: Get short SHA
+        shell: bash
+        run: echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build container
+        uses: docker/build-push-action@v3
+        with:
+          platforms: linux/arm64
+          push: true
+          tags: |
+            idk1703/box64:latest
+            idk1703/box64:${{ env.GITHUB_SHA_SHORT }}
